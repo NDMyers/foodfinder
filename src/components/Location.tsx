@@ -30,7 +30,6 @@ const Location: React.FC = () => {
   const [confettiTime, setConfettiTime] = useState<boolean>(false);
   const [i, setI] = useState<number>(1);
 
-  const API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY
   const router = useRouter()
 
   const getUserLocation = () => {
@@ -65,10 +64,16 @@ const Location: React.FC = () => {
       const latitude = userCoordinates?.latitude
       const longitude = userCoordinates?.longitude
       const cuisinesQuery = selectedCuisines.length > 0 ? `&keyword=${selectedCuisines.join('|')}` : '&keyword=restaurant';
+
+      const response = await fetch('/api/location', {
+        method: 'POST',
+        body: JSON.stringify({ latitude: latitude, longitude: longitude, cuisinesQuery: cuisinesQuery, radius: radius })
+      })
+
       // Make a request to Google Places API
-      const response = await fetch(
-        `/api/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}${cuisinesQuery}&type=restaurant&key=${API_KEY}&opennow=true`
-      );
+      // const response = await fetch(
+      //   `/api/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}${cuisinesQuery}&type=restaurant&key=${API_KEY}&opennow=true`
+      // );
 
       if (!response.ok) {
         setIsLoadingRestaurants(false); // Stop fetching restaurants

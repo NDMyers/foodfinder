@@ -1,5 +1,5 @@
-let latitude = 0
-let longitude = 0
+
+const API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY
 
 export async function GET(req: Request) {
     
@@ -23,19 +23,28 @@ export async function GET(req: Request) {
     //     }
     //   };
 
-      return Response.json({ latitude, longitude })
 
 }
 
 export async function POST(req: Request) {
     try {
         const body = await req.json()
-        latitude = body.latitude
-        longitude = body.longitude
+        const latitude = body.latitude
+        const longitude = body.longitude
+        const cuisinesQuery = body.cuisinesQuery
+        const radius = body.radius
+
+        const response = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}${cuisinesQuery}&type=restaurant&key=${API_KEY}&opennow=true`)
     
-        console.log('Received location data:', { latitude, longitude });
+        if (!response.ok) {
+            throw new Error('Failed to fetch nearby restaurants.')
+        }
+
+        const data = await response.json()
+        console.log('Received location data:', { latitude, longitude, cuisinesQuery, radius });
+        return new Response(JSON.stringify(data))
     
-        return new Response('Location data received successfully.');        
+        // return new Response('Location data received successfully.');        
     } catch (error) {
         return new Response('Method Not Allowed:', { status: 405 })
     }
