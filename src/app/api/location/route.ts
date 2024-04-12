@@ -1,5 +1,5 @@
 
-const API_KEY = process.env.NEXT_PUBLIC_MAPS_API_KEY
+const API_KEY = process.env.MAPS_API
 
 export async function GET(req: Request) {
     
