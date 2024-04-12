@@ -64,6 +64,7 @@ const Location: React.FC = () => {
       const latitude = userCoordinates?.latitude
       const longitude = userCoordinates?.longitude
       const cuisinesQuery = selectedCuisines.length > 0 ? `&keyword=${selectedCuisines.join('|')}` : '&keyword=restaurant';
+      console.log("made it here")
 
       const response = await fetch('/api/location', {
         method: 'POST',
@@ -77,6 +78,7 @@ const Location: React.FC = () => {
 
       if (!response.ok) {
         setIsLoadingRestaurants(false); // Stop fetching restaurants
+        console.log("in error")
         throw new Error('Failed to fetch nearby restaurants');
       }
 
