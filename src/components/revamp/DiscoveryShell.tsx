@@ -11,7 +11,9 @@ import type { Coordinates, RestaurantCard, RestaurantsResponse } from "@/types/r
 
 type LocationState = "idle" | "requesting" | "granted" | "denied" | "unsupported";
 
-const mapApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY;
+interface DiscoveryShellProps {
+  mapApiKey?: string;
+}
 
 const parseErrorMessage = async (response: Response): Promise<string> => {
   try {
@@ -22,7 +24,7 @@ const parseErrorMessage = async (response: Response): Promise<string> => {
   }
 };
 
-export default function DiscoveryShell() {
+export default function DiscoveryShell({ mapApiKey }: DiscoveryShellProps) {
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
 
