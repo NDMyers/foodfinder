@@ -1,51 +1,145 @@
+import { NextRequest, NextResponse } from "next/server";
 
-const API_KEY = process.env.MAPS_API
+import { fetchNearbyRestaurants, PlacesUpstreamError } from "@/lib/google/placesClient";
+import { parseRestaurantsRequest, RequestValidationError } from "@/lib/validation/restaurantsRequest";
+import { CUISINES, RADIUS_OPTIONS, type CuisineId, type RadiusMeters, type SortBy } from "@/types/filters";
 
-export async function GET(req: Request) {
-    
-    // const getLocation = () => {
-    //     if (navigator.geolocation) {
-    //       navigator.geolocation.getCurrentPosition(
-    //         (position) => {
-    //           const latitude = position.coords.latitude;
-    //           const longitude = position.coords.longitude;
-    //         },
-    //         (error) => {
-    //           if (error.code === error.PERMISSION_DENIED) {
-    //             console.log('Please allow location access to use this feature.');
-    //           } else {
-    //             console.log('Error getting location. Please try again later.');
-    //           }
-    //         }
-    //       );
-    //     } else {
-    //       console.log('Geolocation is not supported by this browser.');
-    //     }
-    //   };
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
+const radiusSet = new Set<number>(RADIUS_OPTIONS);
+const cuisineByLabel = new Map<string, CuisineId>(CUISINES.map((cuisine) => [cuisine.label.toLowerCase(), cuisine.id]));
 
+const deprecationHeaders = {
+  Deprecation: "true",
+  Sunset: "Wed, 31 Dec 2026 23:59:59 GMT",
+  Link: "</api/restaurants>; rel=\"successor-version\"",
+};
+
+const parseLegacyCuisineQuery = (value: unknown): CuisineId[] => {
+  if (typeof value !== "string" || !value.includes("keyword=")) {
+    return [];
+  }
+
+  let keywordSection = "";
+  try {
+    keywordSection = decodeURIComponent(value).replace(/^.*keyword=/, "").trim();
+  } catch {
+    return [];
+  }
+
+  if (!keywordSection || keywordSection.toLowerCase() === "restaurant") {
+    return [];
+  }
+
+  const parsed = keywordSection
+    .split("|")
+    .map((entry) => entry.trim().toLowerCase())
+    .map((entry) => cuisineByLabel.get(entry))
+    .filter((entry): entry is CuisineId => Boolean(entry));
+
+  return Array.from(new Set(parsed));
+};
+
+const parseLegacyRadius = (value: unknown): RadiusMeters => {
+  const parsed = Number(value);
+  if (radiusSet.has(parsed)) {
+    return parsed as RadiusMeters;
+  }
+
+  return 3000;
+};
+
+const parseLegacySort = (value: unknown): SortBy => {
+  if (value === "rating") {
+    return "rating";
+  }
+
+  return "distance";
+};
+
+const errorResponse = (status: 400 | 500 | 502, code: string, message: string, details?: string[]) =>
+  NextResponse.json(
+    {
+      error: {
+        code,
+        message,
+        ...(details ? { details } : {}),
+      },
+    },
+    {
+      status,
+      headers: deprecationHeaders,
+    }
+  );
+
+export async function GET() {
+  return NextResponse.json(
+    {
+      message: "Legacy endpoint is deprecated. Use POST /api/restaurants.",
+    },
+    {
+      status: 200,
+      headers: deprecationHeaders,
+    }
+  );
 }
 
-export async function POST(req: Request) {
-    try {
-        const body = await req.json()
-        const latitude = body.latitude
-        const longitude = body.longitude
-        const cuisinesQuery = body.cuisinesQuery
-        const radius = body.radius
+export async function POST(request: NextRequest) {
+  const apiKey = process.env.GOOGLE_PLACES_SERVER_KEY;
+  if (!apiKey) {
+    return errorResponse(500, "SERVER_MISCONFIGURATION", "Missing GOOGLE_PLACES_SERVER_KEY.");
+  }
 
-        const response = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}${cuisinesQuery}&type=restaurant&key=${API_KEY}&opennow=true`)
-    
-        if (!response.ok) {
-            throw new Error('Failed to fetch nearby restaurants.')
-        }
+  let legacyBody: Record<string, unknown>;
+  try {
+    legacyBody = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return errorResponse(400, "INVALID_JSON", "Request body must be valid JSON.");
+  }
 
-        const data = await response.json()
-        console.log('Received location data:', { latitude, longitude, cuisinesQuery, radius });
-        return new Response(JSON.stringify(data))
-    
-        // return new Response('Location data received successfully.');        
-    } catch (error) {
-        return new Response('Method Not Allowed:', { status: 405 })
+  try {
+    const adaptedRequest = parseRestaurantsRequest({
+      latitude: legacyBody.latitude,
+      longitude: legacyBody.longitude,
+      radiusMeters: parseLegacyRadius(legacyBody.radius ?? legacyBody.radiusMeters),
+      cuisines: parseLegacyCuisineQuery(legacyBody.cuisinesQuery),
+      openNow: legacyBody.openNow ?? true,
+      sortBy: parseLegacySort(legacyBody.sortBy),
+    });
+
+    const restaurants = await fetchNearbyRestaurants(adaptedRequest, apiKey);
+    const legacyResults = restaurants.map((restaurant) => ({
+      place_id: restaurant.id,
+      name: restaurant.name,
+      vicinity: restaurant.address,
+      geometry: {
+        location: {
+          lat: restaurant.location.latitude,
+          lng: restaurant.location.longitude,
+        },
+      },
+      rating: restaurant.rating ?? undefined,
+    }));
+
+    return NextResponse.json(
+      {
+        results: legacyResults,
+      },
+      {
+        status: 200,
+        headers: deprecationHeaders,
+      }
+    );
+  } catch (error) {
+    if (error instanceof RequestValidationError) {
+      return errorResponse(400, "INVALID_REQUEST", "Invalid legacy payload.", error.issues);
     }
+
+    if (error instanceof PlacesUpstreamError) {
+      return errorResponse(502, "UPSTREAM_ERROR", error.message);
+    }
+
+    return errorResponse(500, "UNEXPECTED_ERROR", "Unexpected server error.");
+  }
 }
