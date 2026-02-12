@@ -1,24 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 import PwaRegister from "@/components/revamp/PwaRegister";
 import "./globals.css";
 
-const vulfSans = localFont({
-  src: [
-    { path: "../../public/fonts/Vulf-Sans/VulfSansDemo-Regular.otf", weight: "400", style: "normal" },
-    { path: "../../public/fonts/Vulf-Sans/VulfSansDemo-Medium.otf", weight: "500", style: "normal" },
-    { path: "../../public/fonts/Vulf-Sans/VulfSansDemo-Bold.otf", weight: "700", style: "normal" },
-  ],
-  variable: "--font-display",
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
-const vulfMono = localFont({
-  src: [
-    { path: "../../public/fonts/Vulf-Mono/VulfMonoDemo-Regular.otf", weight: "400", style: "normal" },
-    { path: "../../public/fonts/Vulf-Mono/VulfMonoDemo-Bold.otf", weight: "700", style: "normal" },
-  ],
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
   variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -40,13 +35,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#f4f1e8",
+  themeColor: "#fafafa",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${vulfSans.variable} ${vulfMono.variable}`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <PwaRegister />
         {children}
       </body>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 
 import type { Coordinates, RestaurantCard } from "@/types/restaurant";
@@ -19,47 +19,35 @@ const defaultMapCenter: google.maps.LatLngLiteral = {
 };
 
 const mapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f4f1e8" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#433f35" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#f4f1e8" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e8dfcb" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ded4bc" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#accfe0" }] },
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#374151" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#fafafa" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e5e7eb" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#d1d5db" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#bfdbfe" }] },
 ];
 
-export default function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelectRestaurant }: MapCanvasProps) {
+function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelectRestaurant }: MapCanvasProps) {
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
-
   const [mapReady, setMapReady] = useState(false);
 
   const safeCenter = useMemo<google.maps.LatLngLiteral>(() => {
-    if (!center) {
-      return defaultMapCenter;
-    }
-
+    if (!center) return defaultMapCenter;
     return { lat: center.latitude, lng: center.longitude };
   }, [center]);
 
   useEffect(() => {
-    if (!apiKey || !mapNodeRef.current || mapRef.current) {
-      return;
-    }
+    if (!apiKey || !mapNodeRef.current || mapRef.current) return;
 
     let ignore = false;
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-    });
+    const loader = new Loader({ apiKey, version: "weekly" });
 
     loader
       .load()
       .then(() => {
-        if (ignore || !mapNodeRef.current) {
-          return;
-        }
-
+        if (ignore || !mapNodeRef.current) return;
         mapRef.current = new google.maps.Map(mapNodeRef.current, {
           center: safeCenter,
           zoom: 13,
@@ -70,9 +58,7 @@ export default function MapCanvas({ apiKey, center, restaurants, selectedRestaur
         });
         setMapReady(true);
       })
-      .catch(() => {
-        setMapReady(false);
-      });
+      .catch(() => setMapReady(false));
 
     return () => {
       ignore = true;
@@ -80,14 +66,9 @@ export default function MapCanvas({ apiKey, center, restaurants, selectedRestaur
   }, [apiKey, safeCenter]);
 
   useEffect(() => {
-    if (!mapRef.current) {
-      return;
-    }
-
+    if (!mapRef.current) return;
     mapRef.current.panTo(safeCenter);
-    if (center) {
-      mapRef.current.setZoom(14);
-    }
+    if (center) mapRef.current.setZoom(14);
   }, [center, safeCenter]);
 
   const clearMarkers = useCallback(() => {
@@ -96,9 +77,7 @@ export default function MapCanvas({ apiKey, center, restaurants, selectedRestaur
   }, []);
 
   useEffect(() => {
-    if (!mapReady || !mapRef.current || typeof google === "undefined") {
-      return;
-    }
+    if (!mapReady || !mapRef.current || typeof google === "undefined") return;
 
     clearMarkers();
 
@@ -112,9 +91,9 @@ export default function MapCanvas({ apiKey, center, restaurants, selectedRestaur
         title: restaurant.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          fillColor: "#4f6b4a",
+          fillColor: "#0d9488",
           fillOpacity: 1,
-          strokeColor: "#f4f1e8",
+          strokeColor: "#ffffff",
           strokeWeight: 2,
           scale: 7,
         },
@@ -126,23 +105,21 @@ export default function MapCanvas({ apiKey, center, restaurants, selectedRestaur
   }, [clearMarkers, mapReady, onSelectRestaurant, restaurants]);
 
   useEffect(() => {
-    if (!mapRef.current || !selectedRestaurantId || typeof google === "undefined") {
-      return;
-    }
+    if (!mapRef.current || !selectedRestaurantId || typeof google === "undefined") return;
 
     markersRef.current.forEach((marker, restaurantId) => {
       const isSelected = restaurantId === selectedRestaurantId;
       marker.setIcon({
         path: google.maps.SymbolPath.CIRCLE,
-        fillColor: isSelected ? "#ad7f2d" : "#4f6b4a",
+        fillColor: isSelected ? "#d97706" : "#0d9488",
         fillOpacity: 1,
-        strokeColor: "#f4f1e8",
+        strokeColor: "#ffffff",
         strokeWeight: 2,
         scale: isSelected ? 9 : 7,
       });
     });
 
-    const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId);
+    const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);
     if (selectedRestaurant) {
       mapRef.current.panTo({
         lat: selectedRestaurant.location.latitude,
@@ -152,19 +129,32 @@ export default function MapCanvas({ apiKey, center, restaurants, selectedRestaur
   }, [restaurants, selectedRestaurantId]);
 
   useEffect(() => {
-    return () => {
-      clearMarkers();
-    };
+    return () => clearMarkers();
   }, [clearMarkers]);
 
   if (!apiKey) {
     return (
-      <div className="map-empty-state">
-        <h2>Map unavailable</h2>
-        <p>Set `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` to enable map rendering.</p>
+      <div className="min-h-[100dvh] grid place-items-center text-center p-8 bg-background">
+        <div>
+          <h2 className="m-0 mb-2 text-xl font-bold tracking-tight text-ink">
+            Map unavailable
+          </h2>
+          <p className="m-0 text-sm text-ink-soft">
+            Set <code className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY</code> to enable map rendering.
+          </p>
+        </div>
       </div>
     );
   }
 
-  return <div className="map-canvas" ref={mapNodeRef} role="application" aria-label="Restaurant map" />;
+  return (
+    <div
+      className="w-full h-[100dvh]"
+      ref={mapNodeRef}
+      role="application"
+      aria-label="Restaurant map"
+    />
+  );
 }
+
+export default memo(MapCanvas);
