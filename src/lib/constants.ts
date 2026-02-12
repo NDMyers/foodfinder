@@ -1,0 +1,8 @@
+export const WINNER_CYCLE_INTERVAL_MS = 85;
+export const WINNER_SELECTION_DURATION_MS = 2_900;
+
+export const CONFETTI_PIECES = 220;
+export const CONFETTI_GRAVITY = 0.2;
+
+export const RATE_LIMIT_WINDOW_MS = 60_000;
+export const RATE_LIMIT_MAX_REQUESTS = 50;

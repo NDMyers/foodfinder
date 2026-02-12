@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchNearbyRestaurants, PlacesUpstreamError } from "@/lib/google/placesClient";
+import { applyRateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
 import { parseRestaurantsRequest, RequestValidationError } from "@/lib/validation/restaurantsRequest";
 import { CUISINES, RADIUS_OPTIONS, type CuisineId, type RadiusMeters, type SortBy } from "@/types/filters";
 
@@ -93,6 +94,12 @@ export async function POST(request: NextRequest) {
       "SERVER_MISCONFIGURATION",
       "Missing Places API key. Set MAPS_API (or GOOGLE_PLACES_SERVER_KEY)."
     );
+  }
+
+  const ip = getClientIp(request);
+  const rateLimit = applyRateLimit(ip);
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
   }
 
   let legacyBody: Record<string, unknown>;

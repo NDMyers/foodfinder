@@ -1,51 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchNearbyRestaurants, PlacesUpstreamError } from "@/lib/google/placesClient";
+import { applyRateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
 import { parseRestaurantsRequest, RequestValidationError } from "@/lib/validation/restaurantsRequest";
 import type { RestaurantsResponse } from "@/types/restaurant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RateLimitEntry = {
-  count: number;
-  windowStartedAt: number;
-};
-
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 50;
-const rateLimitStore = new Map<string, RateLimitEntry>();
-
-const getClientIp = (request: NextRequest): string => {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0]?.trim() || "unknown";
-  }
-
-  return request.headers.get("x-real-ip") ?? "unknown";
-};
-
-const applyRateLimit = (ip: string): { allowed: boolean; retryAfterSeconds?: number } => {
-  const now = Date.now();
-  const record = rateLimitStore.get(ip);
-
-  if (!record || now - record.windowStartedAt >= RATE_LIMIT_WINDOW_MS) {
-    rateLimitStore.set(ip, { count: 1, windowStartedAt: now });
-    return { allowed: true };
-  }
-
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    const retryAfterSeconds = Math.max(1, Math.ceil((record.windowStartedAt + RATE_LIMIT_WINDOW_MS - now) / 1000));
-    return { allowed: false, retryAfterSeconds };
-  }
-
-  record.count += 1;
-  rateLimitStore.set(ip, record);
-  return { allowed: true };
-};
-
 const createErrorResponse = (
-  status: 400 | 405 | 429 | 500 | 502,
+  status: 400 | 405 | 500 | 502,
   code: string,
   message: string,
   details?: string[]
@@ -75,12 +39,7 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
   const rateLimit = applyRateLimit(ip);
   if (!rateLimit.allowed) {
-    const response = createErrorResponse(429, "RATE_LIMITED", "Too many requests. Please try again shortly.");
-    if (rateLimit.retryAfterSeconds) {
-      response.headers.set("Retry-After", String(rateLimit.retryAfterSeconds));
-    }
-    response.headers.set("Cache-Control", "no-store");
-    return response;
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
   }
 
   let body: unknown;
