@@ -22,15 +22,13 @@ FoodFinder is a mobile-first restaurant discovery app powered by geolocation and
 Copy `.env.example` to `.env.local` and set values:
 
 ```bash
-NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY=...
-GOOGLE_PLACES_SERVER_KEY=...
-NEXT_PUBLIC_APP_ENV=development
+MAPS_API=...
 ```
 
 Key guidance:
 
-- `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` should be browser-restricted by HTTP referrer.
-- `GOOGLE_PLACES_SERVER_KEY` must stay server-side only.
+- Existing Vercel setup with `MAPS_API` is supported (no new env vars required).
+- Optional compatibility aliases also work if already configured: `GOOGLE_PLACES_SERVER_KEY`, `NEXT_PUBLIC_MAPS_API_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY`.
 
 ## Run
 

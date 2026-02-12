@@ -63,9 +63,13 @@ const createErrorResponse = (
 };
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.GOOGLE_PLACES_SERVER_KEY;
+  const apiKey = process.env.GOOGLE_PLACES_SERVER_KEY ?? process.env.MAPS_API;
   if (!apiKey) {
-    return createErrorResponse(500, "SERVER_MISCONFIGURATION", "Missing GOOGLE_PLACES_SERVER_KEY.");
+    return createErrorResponse(
+      500,
+      "SERVER_MISCONFIGURATION",
+      "Missing Places API key. Set MAPS_API (or GOOGLE_PLACES_SERVER_KEY)."
+    );
   }
 
   const ip = getClientIp(request);
