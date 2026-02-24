@@ -29,8 +29,8 @@ function ShellLayout({ mapApiKey }: DiscoveryShellProps) {
   );
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden grid grid-rows-1 md:grid-cols-[1.35fr_1fr]">
-      <div className="relative min-h-[100dvh]">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-background">
+      <div className="absolute inset-0">
         <MapCanvas
           apiKey={mapApiKey}
           center={state.coordinates}

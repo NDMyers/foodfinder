@@ -7,6 +7,7 @@ import { useSearch, type SheetSnap } from "@/contexts/SearchContext";
 import { CUISINES, RADIUS_OPTIONS, type RadiusMeters, type SortBy } from "@/types/filters";
 import Button from "@/components/ui/Button";
 import CuisineChip from "@/components/ui/CuisineChip";
+import Dropdown from "@/components/ui/Dropdown";
 import ResultsList from "@/components/revamp/ResultsList";
 
 const locationCopy: Record<string, string> = {
@@ -81,13 +82,13 @@ export default function FilterSheet() {
         paddingBottom: `calc(1.25rem + env(safe-area-inset-bottom))`,
       }}
       className={`
-        fixed left-0 right-0 bottom-0 z-20 flex flex-col gap-4
-        bg-white/95 backdrop-blur-md
-        border-t border-ink-faint/30
-        rounded-t-2xl
-        px-4 pt-3 shadow-elevated
-        transition-[max-height] duration-200 ease-out
-        md:relative md:!max-h-none md:rounded-none md:border-t-0 md:border-l md:border-ink-faint/30 md:px-5 md:pt-5 md:backdrop-blur-none md:overflow-y-auto
+        fixed left-0 right-0 bottom-0 z-20 flex flex-col gap-5
+        bg-white/70 backdrop-blur-2xl
+        border-t border-glass-border
+        rounded-t-[2rem]
+        px-5 pt-4 shadow-glass
+        transition-[max-height] duration-300 ease-out
+        md:absolute md:top-6 md:left-6 md:bottom-6 md:w-96 md:rounded-3xl md:border md:!max-h-none md:overflow-y-auto md:bg-white/80
       `}
       data-snap={state.sheetSnap}
     >
@@ -95,20 +96,20 @@ export default function FilterSheet() {
       <motion.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0.2}
+        dragElastic={0.4}
         onDragEnd={handleDragEnd}
-        className="flex justify-center py-2 cursor-grab active:cursor-grabbing md:hidden min-h-[48px] -mt-1"
+        className="flex justify-center py-3 cursor-grab active:cursor-grabbing md:hidden min-h-[48px] -mt-2 -mx-4 items-start"
       >
-        <div className="w-12 h-1 rounded-full bg-ink-faint/50" />
+        <div className="w-14 h-1.5 rounded-full bg-ink/20 hover:bg-ink/30 transition-colors" />
       </motion.div>
 
       {/* Header */}
       <div className="flex justify-between items-start gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tighter text-ink m-0">
+          <h1 className="text-3xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-ink to-ink-soft m-0 leading-none">
             FoodFinder
           </h1>
-          <p className="text-sm text-ink-soft mt-0.5">
+          <p className="text-sm text-ink-soft font-medium mt-1">
             Nearby restaurants tuned for now.
           </p>
         </div>
@@ -125,11 +126,10 @@ export default function FilterSheet() {
               role="tab"
               aria-selected={state.sheetSnap === snap}
               onClick={() => snapToPosition(snap)}
-              className={`border-0 px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-                state.sheetSnap === snap
+              className={`border-0 px-3 py-1.5 text-xs font-medium capitalize transition-colors ${state.sheetSnap === snap
                   ? "bg-primary text-white"
                   : "bg-transparent text-ink-soft hover:bg-gray-100"
-              }`}
+                }`}
             >
               {snap}
             </button>
@@ -171,54 +171,37 @@ export default function FilterSheet() {
 
       {/* Location status */}
       <p
-        className={`text-sm -mt-1 ${
-          isDenied ? "text-danger" : "text-ink-soft"
-        }`}
+        className={`text-sm -mt-1 ${isDenied ? "text-danger" : "text-ink-soft"
+          }`}
       >
         {locationCopy[state.locationState]}
       </p>
 
       {/* Filter controls */}
-      <div className="grid grid-cols-2 gap-3">
-        <label className="grid gap-1">
-          <span className="text-xs text-ink-soft tracking-wide">
-            Search Radius
-          </span>
-          <select
-            value={state.filters.radiusMeters}
-            onChange={(e) =>
-              updateRadius(Number(e.target.value) as RadiusMeters)
-            }
-            className="border border-ink-faint/40 rounded-xl bg-white px-3 py-2.5 text-sm min-h-[44px]"
-          >
-            {RADIUS_OPTIONS.map((radius) => (
-              <option key={radius} value={radius}>
-                {radius / 1000} km
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="grid grid-cols-2 gap-3 z-30">
+        <Dropdown
+          label="Search Radius"
+          value={state.filters.radiusMeters}
+          options={RADIUS_OPTIONS.map((r) => ({ label: `${r / 1000} km`, value: r }))}
+          onChange={(val) => updateRadius(val as RadiusMeters)}
+        />
 
-        <label className="grid gap-1">
-          <span className="text-xs text-ink-soft tracking-wide">
-            Sort Results
-          </span>
-          <select
-            value={state.filters.sortBy}
-            onChange={(e) => updateSort(e.target.value as SortBy)}
-            className="border border-ink-faint/40 rounded-xl bg-white px-3 py-2.5 text-sm min-h-[44px]"
-          >
-            <option value="distance">Distance</option>
-            <option value="rating">Rating</option>
-          </select>
-        </label>
+        <Dropdown
+          label="Sort Results"
+          value={state.filters.sortBy}
+          options={[
+            { label: "Distance", value: "distance" },
+            { label: "Rating", value: "rating" },
+          ]}
+          onChange={(val) => updateSort(val as SortBy)}
+        />
 
-        <label className="col-span-2 flex items-center gap-2 text-sm min-h-[44px]">
+        <label className="col-span-2 flex items-center gap-3 mt-1 p-3 rounded-xl bg-white/40 border border-glass-border/40 hover:bg-white/60 transition-colors cursor-pointer text-sm font-medium text-ink">
           <input
             type="checkbox"
             checked={state.filters.openNow}
             onChange={(e) => updateOpenNow(e.target.checked)}
-            className="w-4 h-4 accent-primary"
+            className="w-4 h-4 accent-primary rounded border-glass-border"
           />
           <span>Only show places currently open</span>
         </label>

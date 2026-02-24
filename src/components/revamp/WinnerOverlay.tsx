@@ -48,7 +48,7 @@ export default function WinnerOverlay() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/50 backdrop-blur-md p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="winner-title"
@@ -66,33 +66,39 @@ export default function WinnerOverlay() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="relative w-full max-w-md rounded-2xl bg-white border border-ink-faint/30 shadow-elevated p-6"
+            className="relative w-full max-w-md rounded-[2rem] bg-white/70 backdrop-blur-3xl border border-glass-border shadow-glass p-8 overflow-hidden"
           >
-            <p className="m-0 inline-block rounded-full bg-gold-light text-gold px-3 py-1 text-xs font-semibold uppercase tracking-wider">
-              Winner
-            </p>
-            <h2
-              id="winner-title"
-              className="mt-2 mb-1 text-2xl font-bold tracking-tighter text-ink"
-            >
-              {winner.name}
-            </h2>
-            <p className="m-0 mb-4 text-sm text-ink-soft">{winner.address}</p>
+            {/* Ambient glows behind the glass container */}
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/30 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent/30 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={winner.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+            <div className="relative">
+              <p className="m-0 inline-block rounded-full bg-gradient-to-r from-gold to-[#fcd34d] text-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest shadow-sm">
+                Winner
+              </p>
+              <h2
+                id="winner-title"
+                className="mt-4 mb-2 text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-ink to-ink-soft leading-tight"
               >
-                <Button variant="primary">Open Directions</Button>
-              </a>
-              <Button variant="secondary" onClick={onShare}>
-                Share
-              </Button>
-              <Button variant="ghost" onClick={dismissWinner}>
-                Close
-              </Button>
+                {winner.name}
+              </h2>
+              <p className="m-0 mb-6 text-sm text-ink-soft font-medium">{winner.address}</p>
+
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href={winner.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="primary">Open Directions</Button>
+                </a>
+                <Button variant="secondary" onClick={onShare}>
+                  Share
+                </Button>
+                <Button variant="ghost" onClick={dismissWinner}>
+                  Close
+                </Button>
+              </div>
             </div>
           </motion.div>
         </motion.div>

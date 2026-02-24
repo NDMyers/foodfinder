@@ -7,13 +7,13 @@ type ButtonVariant = "primary" | "secondary" | "emphasis" | "ghost";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-white shadow-soft hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed",
+    "bg-gradient-to-r from-primary to-primary-light text-white shadow-soft hover:shadow-elevated hover:from-primary-dark hover:to-primary disabled:opacity-50 disabled:cursor-not-allowed",
   secondary:
-    "bg-white border border-ink-faint text-ink hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed",
+    "bg-white/60 backdrop-blur-md border border-glass-border/50 text-ink shadow-[0_2px_10px_rgba(0,0,0,0.05)] hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed",
   emphasis:
-    "bg-accent text-white hover:bg-accent-dark disabled:opacity-60 disabled:cursor-not-allowed",
+    "bg-gradient-to-tr from-accent-dark to-accent text-white shadow-[0_4px_14px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:cursor-not-allowed",
   ghost:
-    "bg-transparent border border-ink-faint text-ink-soft hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed",
+    "bg-transparent text-ink-soft hover:bg-black/5 hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed",
 };
 
 interface ButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {

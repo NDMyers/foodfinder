@@ -23,10 +23,10 @@ function SkeletonCards() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="border border-ink-faint/30 bg-white rounded-xl p-4"
+          className="border border-glass-border/40 bg-white/40 backdrop-blur-md rounded-2xl p-5"
         >
-          <div className="h-3 w-3/4 rounded bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite] mb-3" />
-          <div className="h-3 w-1/2 rounded bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite] mb-3" />
+          <div className="h-4 w-3/4 rounded-md bg-gradient-to-r from-gray-200/50 via-gray-100/50 to-gray-200/50 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite] mb-3" />
+          <div className="h-3 w-1/2 rounded-md bg-gradient-to-r from-gray-200/50 via-gray-100/50 to-gray-200/50 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite] mb-4" />
           <div className="flex gap-2">
             {[1, 2, 3].map((j) => (
               <div
@@ -70,42 +70,40 @@ function RestaurantCardItem({
         stiffness: 300,
         damping: 24,
       }}
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
-      className={`border bg-white rounded-xl p-4 text-left cursor-pointer transition-colors shadow-card ${
-        isSelected
-          ? "border-primary ring-1 ring-primary/20"
-          : "border-ink-faint/30 hover:border-ink-faint/60"
-      } ${isHighlighted ? "animate-[pulse-highlight_220ms_ease]" : ""}`}
+      className={`border bg-white/60 backdrop-blur-md rounded-2xl p-5 text-left cursor-pointer transition-all duration-300 shadow-sm ${isSelected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-md shadow-primary/10"
+          : "border-glass-border/50 hover:border-glass-border hover:bg-white/80 hover:shadow-card"
+        } ${isHighlighted ? "animate-[pulse-highlight_220ms_ease]" : ""}`}
     >
       <div className="flex justify-between items-center gap-2">
-        <h3 className="m-0 text-sm font-semibold tracking-tight text-ink">
+        <h3 className="m-0 text-base font-bold tracking-tight text-ink">
           {restaurant.name}
         </h3>
         <span
-          className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-            restaurant.openNow === false
+          className={`text-xs rounded-full px-2 py-0.5 font-medium ${restaurant.openNow === false
               ? "bg-danger-light text-danger"
               : "bg-primary-light text-primary-dark"
-          }`}
+            }`}
         >
           {restaurant.openNow === false ? "Closed" : "Open"}
         </span>
       </div>
 
-      <p className="m-0 mt-1 mb-2 text-sm text-ink-soft truncate">
+      <p className="m-0 mt-1 mb-3 text-sm text-ink-soft truncate font-medium">
         {restaurant.address}
       </p>
 
-      <div className="flex flex-wrap gap-1.5">
-        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs text-ink-soft">
+      <div className="flex flex-wrap gap-2">
+        <span className="inline-flex items-center rounded-full bg-black/5 border border-black/5 px-3 py-1 text-xs text-ink-soft font-medium">
           {formatDistance(restaurant.distanceMeters)}
         </span>
-        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs text-ink-soft">
+        <span className="inline-flex items-center rounded-full bg-black/5 border border-black/5 px-3 py-1 text-xs text-ink-soft font-medium">
           {formatRating(restaurant.rating)}
         </span>
-        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs text-ink-soft">
+        <span className="inline-flex items-center rounded-full bg-black/5 border border-black/5 px-3 py-1 text-xs text-ink-soft font-medium">
           {restaurant.userRatingsTotal
             ? `${restaurant.userRatingsTotal} reviews`
             : "Few reviews"}
