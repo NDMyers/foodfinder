@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export interface DropdownOption<T extends string | number> {
     label: string;
@@ -71,36 +71,28 @@ export default function Dropdown<T extends string | number>({
                 </motion.svg>
             </button>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                        className="absolute z-50 w-full top-full mt-2 bg-white/80 backdrop-blur-xl border border-glass-border shadow-glass rounded-xl overflow-hidden"
-                    >
-                        <div className="max-h-60 overflow-y-auto no-scrollbar py-1">
-                            {options.map((opt) => (
-                                <button
-                                    key={String(opt.value)}
-                                    type="button"
-                                    onClick={() => {
-                                        onChange(opt.value);
-                                        setIsOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-black/5 ${opt.value === value
-                                            ? "bg-accent/10 text-accent-dark font-semibold"
-                                            : "text-ink"
-                                        }`}
-                                >
-                                    {opt.label}
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {isOpen && (
+                <div className="absolute z-50 w-full top-full mt-2 bg-white border border-gray-200 shadow-lg rounded-xl overflow-hidden">
+                    <div className="max-h-60 overflow-y-auto py-1">
+                        {options.map((opt) => (
+                            <button
+                                key={String(opt.value)}
+                                type="button"
+                                onClick={() => {
+                                    onChange(opt.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-100 ${opt.value === value
+                                        ? "bg-accent/10 text-accent-dark font-semibold"
+                                        : "text-ink"
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
