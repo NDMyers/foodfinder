@@ -1,4 +1,7 @@
-export const RADIUS_OPTIONS = [1500, 3000, 4500, 6000] as const;
+export const METERS_TO_MILES = 0.000621371;
+
+// 1, 2, 5, 10, 25 miles expressed in meters
+export const RADIUS_OPTIONS = [1609, 3219, 8047, 16093, 40234] as const;
 
 export type RadiusMeters = (typeof RADIUS_OPTIONS)[number];
 
@@ -30,7 +33,7 @@ export interface SearchFilters {
 }
 
 export const DEFAULT_FILTERS: SearchFilters = {
-  radiusMeters: 3000,
+  radiusMeters: 3219,
   cuisines: [],
   openNow: true,
   sortBy: "distance",

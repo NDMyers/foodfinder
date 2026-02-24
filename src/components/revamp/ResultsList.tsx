@@ -4,12 +4,15 @@ import { memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { useSearch } from "@/contexts/SearchContext";
+import { METERS_TO_MILES } from "@/types/filters";
 import type { RestaurantCard } from "@/types/restaurant";
 
 const formatDistance = (distanceMeters: number | null): string => {
-  if (typeof distanceMeters !== "number") return "Distance unavailable";
-  if (distanceMeters < 1000) return `${distanceMeters} m`;
-  return `${(distanceMeters / 1000).toFixed(1)} km`;
+  if (typeof distanceMeters !== "number" || distanceMeters < 0)
+    return "Distance unavailable";
+  const miles = distanceMeters * METERS_TO_MILES;
+  if (miles < 0.1) return `${Math.round(distanceMeters)} m`;
+  return `${miles.toFixed(1)} miles`;
 };
 
 const formatRating = (rating: number | null): string => {

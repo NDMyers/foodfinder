@@ -4,7 +4,7 @@ import { motion, useMotionValue, useTransform, animate, type PanInfo } from "fra
 import { useCallback, useRef } from "react";
 
 import { useSearch, type SheetSnap } from "@/contexts/SearchContext";
-import { CUISINES, RADIUS_OPTIONS, type RadiusMeters, type SortBy } from "@/types/filters";
+import { CUISINES, METERS_TO_MILES, RADIUS_OPTIONS, type RadiusMeters, type SortBy } from "@/types/filters";
 import Button from "@/components/ui/Button";
 import CuisineChip from "@/components/ui/CuisineChip";
 import Dropdown from "@/components/ui/Dropdown";
@@ -182,7 +182,10 @@ export default function FilterSheet() {
         <Dropdown
           label="Search Radius"
           value={state.filters.radiusMeters}
-          options={RADIUS_OPTIONS.map((r) => ({ label: `${r / 1000} km`, value: r }))}
+          options={RADIUS_OPTIONS.map((r) => {
+              const mi = Math.round(r * METERS_TO_MILES);
+              return { label: `${mi} ${mi === 1 ? "mile" : "miles"}`, value: r };
+            })}
           onChange={(val) => updateRadius(val as RadiusMeters)}
         />
 
