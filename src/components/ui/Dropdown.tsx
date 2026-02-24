@@ -74,9 +74,9 @@ export default function Dropdown<T extends string | number>({
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         className="absolute z-50 w-full top-full mt-2 bg-white/80 backdrop-blur-xl border border-glass-border shadow-glass rounded-xl overflow-hidden"
                     >
