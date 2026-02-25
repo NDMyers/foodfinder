@@ -31,6 +31,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const url = new URL(event.request.url);
+
+  // Only handle http/https — skip chrome-extension:// and other schemes.
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return;
+  }
+
+  // Never cache Google Maps API requests — serving them from cache breaks the loader.
+  if (url.hostname.endsWith("googleapis.com") || url.hostname.endsWith("gstatic.com")) {
+    return;
+  }
+
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() => {
