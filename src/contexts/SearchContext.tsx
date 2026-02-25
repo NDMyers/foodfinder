@@ -145,7 +145,6 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
     case "WINNER_SELECTION_START":
       return { ...state, isSelectingWinner: true, winner: null };
     case "WINNER_SELECTED":
-      console.log("[Reducer] WINNER_SELECTED:", action.payload.name);
       return {
         ...state,
         isSelectingWinner: false,
@@ -309,15 +308,12 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   }, [state.coordinates, state.filters, generateSearchKey]);
 
   const searchAndPickWinner = useCallback(async () => {
-    console.log("[searchAndPickWinner] Called. Coords:", !!state.coordinates, "Loading:", state.loading, "Selecting:", state.isSelectingWinner);
     if (!state.coordinates || state.isSelectingWinner || state.loading) return;
 
     const searchKey = generateSearchKey(state.coordinates, state.filters);
     const isCached = state.lastSearchKey === searchKey && state.restaurants.length > 0;
-    console.log("[searchAndPickWinner] Cache check - isCached:", isCached, "restaurants:", state.restaurants.length);
 
     if (isCached) {
-      console.log("[searchAndPickWinner] Using cached results, starting winner selection with", state.restaurants.length, "restaurants");
       const pool = [...state.restaurants];
       dispatch({ type: "WINNER_SELECTION_START" });
 
@@ -332,7 +328,6 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         window.clearInterval(intervalId);
         const finalWinner = pickRandomRestaurant(pool);
         if (finalWinner) {
-          console.log("[searchAndPickWinner] Cached winner selected:", finalWinner.name);
           dispatch({ type: "WINNER_SELECTED", payload: finalWinner });
         }
       }, WINNER_SELECTION_DURATION_MS);
@@ -366,7 +361,6 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         });
 
         if (restaurants.length > 0) {
-          console.log("[searchAndPickWinner] Starting winner selection with", restaurants.length, "restaurants");
           const pool = [...restaurants];
           dispatch({ type: "WINNER_SELECTION_START" });
 
@@ -381,7 +375,6 @@ export function SearchProvider({ children }: { children: ReactNode }) {
             window.clearInterval(intervalId);
             const finalWinner = pickRandomRestaurant(pool);
             if (finalWinner) {
-              console.log("[searchAndPickWinner] Winner selected:", finalWinner.name);
               dispatch({ type: "WINNER_SELECTED", payload: finalWinner });
             }
           }, WINNER_SELECTION_DURATION_MS);
@@ -470,7 +463,6 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     if (lastFetchedKeyRef.current === key) return;
     lastFetchedKeyRef.current = key;
 
-    console.log("[SearchContext] Auto-fetching restaurants for location:", key);
     dispatch({ type: "FETCH_START" });
     const coords = state.coordinates;
     const filters = state.filters;
@@ -490,13 +482,11 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     })
       .then((res) => {
         if (!res.ok) {
-          console.error("[SearchContext] API error:", res.status, res.statusText);
           throw new Error(`Request failed (${res.status})`);
         }
         return res.json() as Promise<RestaurantsResponse>;
       })
       .then((payload) => {
-        console.log("[SearchContext] Fetched restaurants:", payload.restaurants?.length ?? 0);
         dispatch({
           type: "FETCH_SUCCESS",
           payload: { restaurants: payload.restaurants ?? [], searchKey },
@@ -504,7 +494,6 @@ export function SearchProvider({ children }: { children: ReactNode }) {
       })
       .catch((err: unknown) => {
         const errMsg = err instanceof Error ? err.message : "Failed to fetch nearby restaurants.";
-        console.error("[SearchContext] Fetch error:", errMsg);
         dispatch({
           type: "FETCH_ERROR",
           payload: errMsg,

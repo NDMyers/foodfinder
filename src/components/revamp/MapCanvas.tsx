@@ -18,19 +18,19 @@ const defaultMapCenter: google.maps.LatLngLiteral = {
   lng: -98.35,
 };
 
-const mapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#374151" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#fafafa" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e5e7eb" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#d1d5db" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#bfdbfe" }] },
-];
+function makePinElement(selected: boolean): google.maps.marker.PinElement {
+  return new google.maps.marker.PinElement({
+    background: selected ? "#d97706" : "#0d9488",
+    borderColor: "#ffffff",
+    glyphColor: "#ffffff",
+    scale: selected ? 1.2 : 1,
+  });
+}
 
 function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelectRestaurant }: MapCanvasProps) {
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
   const [mapReady, setMapReady] = useState(false);
 
   const safeCenter = useMemo<google.maps.LatLngLiteral>(() => {
@@ -44,17 +44,19 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
     let ignore = false;
     const loader = new Loader({ apiKey, version: "weekly" });
 
-    loader
-      .load()
-      .then(() => {
+    Promise.all([
+      loader.importLibrary("maps"),
+      loader.importLibrary("marker"),
+    ])
+      .then(([{ Map }]) => {
         if (ignore || !mapNodeRef.current) return;
-        mapRef.current = new google.maps.Map(mapNodeRef.current, {
+        mapRef.current = new Map(mapNodeRef.current, {
           center: safeCenter,
           zoom: 13,
           disableDefaultUI: true,
           zoomControl: true,
           fullscreenControl: false,
-          styles: mapStyles,
+          mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID ?? "DEMO_MAP_ID",
         });
         setMapReady(true);
       })
@@ -72,7 +74,7 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
   }, [center, safeCenter]);
 
   const clearMarkers = useCallback(() => {
-    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current.forEach((marker) => { marker.map = null; });
     markersRef.current.clear();
   }, []);
 
@@ -91,18 +93,11 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
         lng: restaurant.location.longitude,
       };
 
-      const marker = new google.maps.Marker({
+      const marker = new google.maps.marker.AdvancedMarkerElement({
         map: mapRef.current,
         position,
         title: restaurant.name,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          fillColor: "#0d9488",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-          scale: 7,
-        },
+        content: makePinElement(false).element,
       });
 
       marker.addListener("click", () => onSelectRestaurant(restaurant.id));
@@ -123,15 +118,7 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
     if (!mapRef.current || !selectedRestaurantId || typeof google === "undefined") return;
 
     markersRef.current.forEach((marker, restaurantId) => {
-      const isSelected = restaurantId === selectedRestaurantId;
-      marker.setIcon({
-        path: google.maps.SymbolPath.CIRCLE,
-        fillColor: isSelected ? "#d97706" : "#0d9488",
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 2,
-        scale: isSelected ? 9 : 7,
-      });
+      marker.content = makePinElement(restaurantId === selectedRestaurantId).element;
     });
 
     const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);
