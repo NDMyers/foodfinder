@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+
 
 import { useSearch } from "@/contexts/SearchContext";
 import { METERS_TO_MILES } from "@/types/filters";
@@ -22,7 +22,7 @@ const formatRating = (rating: number | null): string => {
 
 function SkeletonCards() {
   return (
-    <div className="overflow-auto grid gap-3 pb-1" aria-live="polite" aria-busy="true">
+    <div className="grid gap-3 pt-1 pb-2" aria-live="polite" aria-busy="true">
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
@@ -58,28 +58,17 @@ function RestaurantCardItem({
   index: number;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{
-        opacity: 1,
-        y: 0,
-        scale: isHighlighted ? 1.02 : 1,
-      }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{
-        delay: index * 0.04,
-        type: "spring",
-        stiffness: 300,
-        damping: 24,
-      }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
       onClick={onSelect}
-      className={`border bg-white/60 backdrop-blur-md rounded-2xl p-5 text-left cursor-pointer transition-all duration-300 shadow-sm ${isSelected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-md shadow-primary/10"
-          : "border-glass-border/50 hover:border-glass-border hover:bg-white/80 hover:shadow-card"
-        } ${isHighlighted ? "animate-[pulse-highlight_220ms_ease]" : ""}`}
+      style={{
+        animationDelay: `${index * 40}ms`,
+        animationFillMode: "both",
+      }}
+      className={`border bg-white/60 backdrop-blur-md rounded-2xl p-5 text-left cursor-pointer shadow-sm animate-fade-in hover:scale-[1.02] active:scale-[0.98] transition-transform duration-150 ${isSelected
+        ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-md shadow-primary/10"
+        : "border-glass-border/50 hover:border-glass-border hover:bg-white/80 hover:shadow-card"
+        } ${isHighlighted ? "scale-[1.02] animate-[pulse-highlight_220ms_ease]" : ""}`}
     >
       <div className="flex justify-between items-center gap-2">
         <h3 className="m-0 text-base font-bold tracking-tight text-ink">
@@ -87,8 +76,8 @@ function RestaurantCardItem({
         </h3>
         <span
           className={`text-xs rounded-full px-2 py-0.5 font-medium ${restaurant.openNow === false
-              ? "bg-danger-light text-danger"
-              : "bg-primary-light text-primary-dark"
+            ? "bg-danger-light text-danger"
+            : "bg-success-light text-success-dark"
             }`}
         >
           {restaurant.openNow === false ? "Closed" : "Open"}
@@ -112,7 +101,7 @@ function RestaurantCardItem({
             : "Few reviews"}
         </span>
       </div>
-    </motion.button>
+    </button>
   );
 }
 
@@ -161,24 +150,22 @@ function ResultsList() {
 
   return (
     <div
-      className="overflow-auto grid gap-3 pb-1 md:max-h-[min(56dvh,42rem)]"
+      className="grid gap-3 pt-1 pb-2"
       aria-live="polite"
     >
-      <AnimatePresence mode="popLayout">
-        {restaurants.map((restaurant, index) => (
-          <RestaurantCardItem
-            key={restaurant.id}
-            restaurant={restaurant}
-            isSelected={selectedRestaurantId === restaurant.id}
-            isHighlighted={
-              isSelectingWinner &&
-              highlightedRestaurantId === restaurant.id
-            }
-            onSelect={() => focusRestaurant(restaurant.id)}
-            index={index}
-          />
-        ))}
-      </AnimatePresence>
+      {restaurants.map((restaurant, index) => (
+        <RestaurantCardItem
+          key={restaurant.id}
+          restaurant={restaurant}
+          isSelected={selectedRestaurantId === restaurant.id}
+          isHighlighted={
+            isSelectingWinner &&
+            highlightedRestaurantId === restaurant.id
+          }
+          onSelect={() => focusRestaurant(restaurant.id)}
+          index={index}
+        />
+      ))}
     </div>
   );
 }
