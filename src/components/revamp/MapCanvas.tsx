@@ -18,7 +18,7 @@ const defaultMapCenter: google.maps.LatLngLiteral = {
   lng: -98.35,
 };
 
-function makePinElement(selected: boolean): google.maps.marker.PinElement {
+function makePinElement(selected: boolean) {
   return new google.maps.marker.PinElement({
     background: selected ? "#d97706" : "#0d9488",
     borderColor: "#ffffff",
@@ -97,10 +97,10 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
         map: mapRef.current,
         position,
         title: restaurant.name,
-        content: makePinElement(false).element,
+        content: makePinElement(false),
       });
 
-      marker.addListener("click", () => onSelectRestaurant(restaurant.id));
+      marker.addListener("gmp-click", () => onSelectRestaurant(restaurant.id));
       markersRef.current.set(restaurant.id, marker);
       bounds.extend(position);
     });
@@ -118,7 +118,7 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
     if (!mapRef.current || !selectedRestaurantId || typeof google === "undefined") return;
 
     markersRef.current.forEach((marker, restaurantId) => {
-      marker.content = makePinElement(restaurantId === selectedRestaurantId).element;
+      marker.content = makePinElement(restaurantId === selectedRestaurantId);
     });
 
     const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);

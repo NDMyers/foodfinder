@@ -1,4 +1,4 @@
-const CACHE_NAME = "foodfinder-v2-shell";
+const CACHE_NAME = "foodfinder-v3-shell";
 const APP_SHELL_ROUTES = ["/", "/revamp", "/offline", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
