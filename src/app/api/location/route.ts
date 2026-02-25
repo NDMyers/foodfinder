@@ -48,7 +48,7 @@ const parseLegacyRadius = (value: unknown): RadiusMeters => {
     return parsed as RadiusMeters;
   }
 
-  return 3000;
+  return 3219;
 };
 
 const parseLegacySort = (value: unknown): SortBy => {

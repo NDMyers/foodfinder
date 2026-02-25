@@ -1,4 +1,4 @@
-import type { CuisineId, SortBy } from "@/types/filters";
+import type { CuisineId, RadiusMeters, SortBy } from "@/types/filters";
 
 export interface Coordinates {
   latitude: number;
@@ -8,7 +8,7 @@ export interface Coordinates {
 export interface RestaurantsRequest {
   latitude: number;
   longitude: number;
-  radiusMeters: 1500 | 3000 | 4500 | 6000;
+  radiusMeters: RadiusMeters;
   cuisines: CuisineId[];
   openNow: boolean;
   sortBy: SortBy;
