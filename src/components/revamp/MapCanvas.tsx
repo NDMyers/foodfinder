@@ -81,13 +81,19 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
 
     clearMarkers();
 
+    if (restaurants.length === 0) return;
+
+    const bounds = new google.maps.LatLngBounds();
+
     restaurants.forEach((restaurant) => {
+      const position = {
+        lat: restaurant.location.latitude,
+        lng: restaurant.location.longitude,
+      };
+
       const marker = new google.maps.Marker({
         map: mapRef.current,
-        position: {
-          lat: restaurant.location.latitude,
-          lng: restaurant.location.longitude,
-        },
+        position,
         title: restaurant.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -101,6 +107,15 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
 
       marker.addListener("click", () => onSelectRestaurant(restaurant.id));
       markersRef.current.set(restaurant.id, marker);
+      bounds.extend(position);
+    });
+
+    const isMobile = window.innerWidth < 768;
+    mapRef.current.fitBounds(bounds, {
+      top: 60,
+      right: 60,
+      bottom: isMobile ? 380 : 60,
+      left: isMobile ? 60 : 440,
     });
   }, [clearMarkers, mapReady, onSelectRestaurant, restaurants]);
 

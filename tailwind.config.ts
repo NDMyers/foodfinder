@@ -29,6 +29,11 @@ const config: Config = {
           DEFAULT: "#ef4444",
           light: "#fef2f2",
         },
+        success: {
+          DEFAULT: "#10b981",
+          light: "#ecfdf5",
+          dark: "#047857",
+        },
         ink: {
           DEFAULT: "#000000",
           soft: "#4b5563",

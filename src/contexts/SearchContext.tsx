@@ -4,7 +4,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useReducer,
   type ReactNode,
 } from "react";
@@ -48,6 +50,7 @@ interface SearchState {
   errorMessage: string | null;
   isSelectingWinner: boolean;
   winner: RestaurantCard | null;
+  lastSearchKey: string | null;
 }
 
 type SearchAction =
@@ -59,7 +62,7 @@ type SearchAction =
   | { type: "FETCH_START" }
   | {
       type: "FETCH_SUCCESS";
-      payload: { restaurants: RestaurantCard[] };
+      payload: { restaurants: RestaurantCard[]; searchKey: string };
     }
   | { type: "FETCH_ERROR"; payload: string }
   | { type: "SELECT_RESTAURANT"; payload: string }
@@ -80,6 +83,7 @@ const initialState: SearchState = {
   errorMessage: null,
   isSelectingWinner: false,
   winner: null,
+  lastSearchKey: null,
 };
 
 function searchReducer(state: SearchState, action: SearchAction): SearchState {
@@ -119,6 +123,7 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
         selectedRestaurantId:
           action.payload.restaurants[0]?.id ?? null,
         highlightedRestaurantId: null,
+        lastSearchKey: action.payload.searchKey,
       };
     case "FETCH_ERROR":
       return {
@@ -134,13 +139,13 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
         ...state,
         selectedRestaurantId: action.payload,
         highlightedRestaurantId: action.payload,
-        sheetSnap: "half",
       };
     case "HIGHLIGHT_RESTAURANT":
       return { ...state, highlightedRestaurantId: action.payload };
     case "WINNER_SELECTION_START":
       return { ...state, isSelectingWinner: true, winner: null };
     case "WINNER_SELECTED":
+      console.log("[Reducer] WINNER_SELECTED:", action.payload.name);
       return {
         ...state,
         isSelectingWinner: false,
@@ -158,7 +163,9 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
 interface SearchContextValue {
   state: SearchState;
   requestUserLocation: () => void;
+  geocodeAddress: (address: string) => Promise<void>;
   fetchRestaurants: () => Promise<void>;
+  searchAndPickWinner: () => Promise<void>;
   startWinnerSelection: () => void;
   updateRadius: (radius: RadiusMeters) => void;
   updateSort: (sortBy: SortBy) => void;
@@ -216,6 +223,46 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const geocodeAddress = useCallback(async (address: string) => {
+    if (!address.trim()) return;
+
+    try {
+      const response = await fetch("/api/geocode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to geocode address");
+      }
+
+      interface GeocodeResponse {
+        latitude: number;
+        longitude: number;
+      }
+
+      const data = (await response.json()) as GeocodeResponse;
+      dispatch({
+        type: "SET_COORDINATES",
+        payload: {
+          latitude: data.latitude,
+          longitude: data.longitude,
+        },
+      });
+    } catch (error) {
+      dispatch({
+        type: "FETCH_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to geocode address",
+      });
+    }
+  }, []);
+
+  const generateSearchKey = useCallback((coordinates: Coordinates, filters: SearchFilters): string => {
+    return `${coordinates.latitude},${coordinates.longitude},${filters.radiusMeters},${filters.cuisines.join("|")},${filters.openNow},${filters.sortBy}`;
+  }, []);
+
   const fetchRestaurants = useCallback(async () => {
     if (!state.coordinates) {
       dispatch({
@@ -227,6 +274,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "FETCH_START" });
 
     try {
+      const searchKey = generateSearchKey(state.coordinates, state.filters);
       const response = await fetch("/api/restaurants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -247,7 +295,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
       const payload = (await response.json()) as RestaurantsResponse;
       dispatch({
         type: "FETCH_SUCCESS",
-        payload: { restaurants: payload.restaurants ?? [] },
+        payload: { restaurants: payload.restaurants ?? [], searchKey },
       });
     } catch (error) {
       dispatch({
@@ -258,7 +306,97 @@ export function SearchProvider({ children }: { children: ReactNode }) {
             : "Failed to fetch nearby restaurants.",
       });
     }
-  }, [state.coordinates, state.filters]);
+  }, [state.coordinates, state.filters, generateSearchKey]);
+
+  const searchAndPickWinner = useCallback(async () => {
+    console.log("[searchAndPickWinner] Called. Coords:", !!state.coordinates, "Loading:", state.loading, "Selecting:", state.isSelectingWinner);
+    if (!state.coordinates || state.isSelectingWinner || state.loading) return;
+
+    const searchKey = generateSearchKey(state.coordinates, state.filters);
+    const isCached = state.lastSearchKey === searchKey && state.restaurants.length > 0;
+    console.log("[searchAndPickWinner] Cache check - isCached:", isCached, "restaurants:", state.restaurants.length);
+
+    if (isCached) {
+      console.log("[searchAndPickWinner] Using cached results, starting winner selection with", state.restaurants.length, "restaurants");
+      const pool = [...state.restaurants];
+      dispatch({ type: "WINNER_SELECTION_START" });
+
+      const intervalId = window.setInterval(() => {
+        const candidate = pickRandomRestaurant(pool);
+        if (candidate) {
+          dispatch({ type: "HIGHLIGHT_RESTAURANT", payload: candidate.id });
+        }
+      }, WINNER_CYCLE_INTERVAL_MS);
+
+      window.setTimeout(() => {
+        window.clearInterval(intervalId);
+        const finalWinner = pickRandomRestaurant(pool);
+        if (finalWinner) {
+          console.log("[searchAndPickWinner] Cached winner selected:", finalWinner.name);
+          dispatch({ type: "WINNER_SELECTED", payload: finalWinner });
+        }
+      }, WINNER_SELECTION_DURATION_MS);
+    } else {
+      dispatch({ type: "FETCH_START" });
+
+      try {
+        const response = await fetch("/api/restaurants", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            latitude: state.coordinates.latitude,
+            longitude: state.coordinates.longitude,
+            radiusMeters: state.filters.radiusMeters,
+            cuisines: state.filters.cuisines,
+            openNow: state.filters.openNow,
+            sortBy: state.filters.sortBy,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(await parseErrorMessage(response));
+        }
+
+        const payload = (await response.json()) as RestaurantsResponse;
+        const restaurants = payload.restaurants ?? [];
+
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { restaurants, searchKey },
+        });
+
+        if (restaurants.length > 0) {
+          console.log("[searchAndPickWinner] Starting winner selection with", restaurants.length, "restaurants");
+          const pool = [...restaurants];
+          dispatch({ type: "WINNER_SELECTION_START" });
+
+          const intervalId = window.setInterval(() => {
+            const candidate = pickRandomRestaurant(pool);
+            if (candidate) {
+              dispatch({ type: "HIGHLIGHT_RESTAURANT", payload: candidate.id });
+            }
+          }, WINNER_CYCLE_INTERVAL_MS);
+
+          window.setTimeout(() => {
+            window.clearInterval(intervalId);
+            const finalWinner = pickRandomRestaurant(pool);
+            if (finalWinner) {
+              console.log("[searchAndPickWinner] Winner selected:", finalWinner.name);
+              dispatch({ type: "WINNER_SELECTED", payload: finalWinner });
+            }
+          }, WINNER_SELECTION_DURATION_MS);
+        }
+      } catch (error) {
+        dispatch({
+          type: "FETCH_ERROR",
+          payload:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch nearby restaurants.",
+        });
+      }
+    }
+  }, [state.coordinates, state.filters, state.isSelectingWinner, state.loading, state.lastSearchKey, state.restaurants, generateSearchKey]);
 
   const startWinnerSelection = useCallback(() => {
     if (state.restaurants.length === 0 || state.isSelectingWinner) return;
@@ -323,11 +461,66 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  // Auto-fetch restaurants when coordinates change
+  const lastFetchedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!state.coordinates || state.loading) return;
+
+    const key = `${state.coordinates.latitude},${state.coordinates.longitude}`;
+    if (lastFetchedKeyRef.current === key) return;
+    lastFetchedKeyRef.current = key;
+
+    console.log("[SearchContext] Auto-fetching restaurants for location:", key);
+    dispatch({ type: "FETCH_START" });
+    const coords = state.coordinates;
+    const filters = state.filters;
+    const searchKey = generateSearchKey(coords, filters);
+
+    fetch("/api/restaurants", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        radiusMeters: filters.radiusMeters,
+        cuisines: filters.cuisines,
+        openNow: filters.openNow,
+        sortBy: filters.sortBy,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          console.error("[SearchContext] API error:", res.status, res.statusText);
+          throw new Error(`Request failed (${res.status})`);
+        }
+        return res.json() as Promise<RestaurantsResponse>;
+      })
+      .then((payload) => {
+        console.log("[SearchContext] Fetched restaurants:", payload.restaurants?.length ?? 0);
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { restaurants: payload.restaurants ?? [], searchKey },
+        });
+      })
+      .catch((err: unknown) => {
+        const errMsg = err instanceof Error ? err.message : "Failed to fetch nearby restaurants.";
+        console.error("[SearchContext] Fetch error:", errMsg);
+        dispatch({
+          type: "FETCH_ERROR",
+          payload: errMsg,
+        });
+      });
+  // Only re-run when coordinates change, not filters — user must re-Search to apply filter changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.coordinates]);
+
   const value = useMemo<SearchContextValue>(
     () => ({
       state,
       requestUserLocation,
+      geocodeAddress,
       fetchRestaurants,
+      searchAndPickWinner,
       startWinnerSelection,
       updateRadius,
       updateSort,
@@ -340,7 +533,9 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     [
       state,
       requestUserLocation,
+      geocodeAddress,
       fetchRestaurants,
+      searchAndPickWinner,
       startWinnerSelection,
       updateRadius,
       updateSort,
