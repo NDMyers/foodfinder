@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description: "Find nearby restaurants, filter quickly, and let the app pick your winner.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   appleWebApp: {
     title: "FoodFinder",
