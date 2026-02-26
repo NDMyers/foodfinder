@@ -79,7 +79,7 @@ export default function WinnerOverlay() {
         opacity: visible ? 1 : 0,
         transition: "opacity 0.25s ease",
       }}
-      className="fixed inset-0 z-50 grid place-items-center bg-black/50 backdrop-blur-md p-4"
+      className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
     >
       <Confetti
         width={viewport.width}
@@ -87,42 +87,50 @@ export default function WinnerOverlay() {
         recycle={false}
         numberOfPieces={CONFETTI_PIECES}
         gravity={CONFETTI_GRAVITY}
+        colors={['#FFB5E8', '#B5EAD7', '#C7CEEA', '#FF9CEE', '#FDFDBD']}
       />
 
       <div
         style={{
           opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0) scale(1)" : "translateY(60px) scale(0.92)",
-          transition: "opacity 0.35s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+          transform: visible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.25s ease, transform 0.2s ease-out",
         }}
-        className="relative w-full max-w-md rounded-[2rem] bg-white/70 backdrop-blur-3xl border border-glass-border shadow-glass p-8 overflow-hidden"
+        className="relative w-full max-w-md bg-[#FFB5E8] border-4 border-black shadow-[8px_8px_0_0_#000] p-8 rounded-none overflow-hidden"
       >
-        {/* Ambient glows */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent/30 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative">
-          <p className="m-0 inline-block rounded-full bg-gradient-to-r from-gold to-[#fcd34d] text-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest shadow-sm">
+        <div className="relative flex flex-col items-start gap-4">
+          <p className="m-0 inline-block bg-white text-black border-2 border-black px-3 py-1 text-xs font-black uppercase tracking-widest">
             Winner
           </p>
-          <h2
-            id="winner-title"
-            className="mt-4 mb-1 text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-ink to-ink-soft leading-tight"
-          >
-            {winner.name}
-          </h2>
-          <p className="m-0 mb-6 text-sm text-ink-soft font-medium">{winner.address}</p>
 
-          <div className="flex flex-wrap gap-3">
-            <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="primary">Get Directions</Button>
+          <div className="w-full">
+            <h2
+              id="winner-title"
+              className="m-0 text-5xl font-black uppercase tracking-tighter text-black leading-none break-words"
+            >
+              {winner.name}
+            </h2>
+          </div>
+
+          <p className="m-0 text-lg text-black font-bold border-t-2 border-black pt-4 w-full">
+            {winner.address}
+          </p>
+
+          <div className="flex flex-col w-full gap-3 mt-4">
+            <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+              <Button variant="primary" className="w-full justify-between items-center bg-black text-white hover:bg-black/90">
+                <span>Get Directions</span>
+                <span className="text-xl leading-none translate-y-[-2px]">↗</span>
+              </Button>
             </a>
-            <Button variant="secondary" onClick={onShare}>
-              Share
-            </Button>
-            <Button variant="ghost" onClick={dismissWinner}>
-              Close
-            </Button>
+            <div className="flex gap-3 w-full">
+              <Button variant="secondary" onClick={onShare} className="flex-1 bg-[#B5EAD7] border-2 border-black text-black hover:bg-[#8adeb4]">
+                Share
+              </Button>
+              <Button variant="secondary" onClick={dismissWinner} className="flex-1 bg-white border-2 border-black text-black hover:bg-gray-100">
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       </div>

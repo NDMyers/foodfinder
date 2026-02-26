@@ -22,19 +22,19 @@ const formatRating = (rating: number | null): string => {
 
 function SkeletonCards() {
   return (
-    <div className="grid gap-3 pt-1 pb-2" aria-live="polite" aria-busy="true">
+    <div className="grid gap-0 border-t-2 border-b-2 border-ink pt-0 pb-0" aria-live="polite" aria-busy="true">
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="border border-glass-border/40 bg-white/40 backdrop-blur-md rounded-2xl p-5"
+          className="border-b-2 border-ink bg-white p-5 last:border-b-0"
         >
-          <div className="h-4 w-3/4 rounded-md bg-gradient-to-r from-gray-200/50 via-gray-100/50 to-gray-200/50 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite] mb-3" />
-          <div className="h-3 w-1/2 rounded-md bg-gradient-to-r from-gray-200/50 via-gray-100/50 to-gray-200/50 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite] mb-4" />
+          <div className="h-4 w-3/4 bg-ink/20 animate-pulse mb-3" />
+          <div className="h-3 w-1/2 bg-ink/20 animate-pulse mb-4" />
           <div className="flex gap-2">
             {[1, 2, 3].map((j) => (
               <div
                 key={j}
-                className="w-16 h-6 rounded-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.25s_linear_infinite]"
+                className="w-16 h-6 bg-ink/20 animate-pulse"
               />
             ))}
           </div>
@@ -62,43 +62,43 @@ function RestaurantCardItem({
       type="button"
       onClick={onSelect}
       style={{
-        animationDelay: `${index * 40}ms`,
+        animationDelay: `${index * 20}ms`,
         animationFillMode: "both",
       }}
-      className={`border bg-white/60 backdrop-blur-md rounded-2xl p-5 text-left cursor-pointer shadow-sm animate-fade-in hover:scale-[1.02] active:scale-[0.98] transition-transform duration-150 ${isSelected
-        ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-md shadow-primary/10"
-        : "border-glass-border/50 hover:border-glass-border hover:bg-white/80 hover:shadow-card"
-        } ${isHighlighted ? "scale-[1.02] animate-[pulse-highlight_220ms_ease]" : ""}`}
+      className={`border-b-2 border-ink p-5 text-left cursor-pointer animate-fade-in transition-colors duration-150 last:border-b-0 ${isSelected
+        ? "bg-ink/10"
+        : "bg-white text-ink hover:bg-ink/10"
+        } ${isHighlighted ? "bg-accent/10 border-accent" : ""}`}
     >
-      <div className="flex justify-between items-center gap-2">
-        <h3 className="m-0 text-base font-bold tracking-tight text-ink">
+      <div className="flex justify-between items-start gap-2">
+        <h3 className={`m-0 text-2xl font-black tracking-tighter uppercase leading-none text-ink`}>
           {restaurant.name}
         </h3>
         <span
-          className={`text-xs rounded-full px-2 py-0.5 font-medium ${restaurant.openNow === false
-            ? "bg-danger-light text-danger"
-            : "bg-success-light text-success-dark"
+          className={`text-[10px] px-1.5 py-0.5 font-bold uppercase tracking-widest border-2 ${restaurant.openNow === false
+            ? "border-accent bg-accent text-white"
+            : "border-success bg-success text-white"
             }`}
         >
           {restaurant.openNow === false ? "Closed" : "Open"}
         </span>
       </div>
 
-      <p className="m-0 mt-1 mb-3 text-sm text-ink-soft truncate font-medium">
+      <p className={`m-0 mt-3 mb-4 text-sm uppercase tracking-tight truncate font-bold text-ink-soft`}>
         {restaurant.address}
       </p>
 
       <div className="flex flex-wrap gap-2">
-        <span className="inline-flex items-center rounded-full bg-black/5 border border-black/5 px-3 py-1 text-xs text-ink-soft font-medium">
+        <span className={`inline-flex items-center border-2 px-2 py-0.5 text-xs font-bold uppercase tracking-tighter border-ink/20 text-ink`}>
           {formatDistance(restaurant.distanceMeters)}
         </span>
-        <span className="inline-flex items-center rounded-full bg-black/5 border border-black/5 px-3 py-1 text-xs text-ink-soft font-medium">
+        <span className={`inline-flex items-center border-2 px-2 py-0.5 text-xs font-bold uppercase tracking-tighter border-ink/20 text-ink`}>
           {formatRating(restaurant.rating)}
         </span>
-        <span className="inline-flex items-center rounded-full bg-black/5 border border-black/5 px-3 py-1 text-xs text-ink-soft font-medium">
+        <span className={`inline-flex items-center border-2 px-2 py-0.5 text-xs font-bold uppercase tracking-tighter border-ink/20 text-ink`}>
           {restaurant.userRatingsTotal
-            ? `${restaurant.userRatingsTotal} reviews`
-            : "Few reviews"}
+            ? `${restaurant.userRatingsTotal} rev`
+            : "No rev"}
         </span>
       </div>
     </button>
@@ -121,13 +121,13 @@ function ResultsList() {
   if (errorMessage) {
     return (
       <div
-        className="border border-dashed border-ink-faint/50 rounded-xl p-6 text-center"
+        className="border-2 border-ink bg-white p-6"
         role="status"
       >
-        <h3 className="m-0 mb-2 text-sm font-semibold text-ink">
+        <h3 className="m-0 mb-2 text-xl font-black uppercase tracking-tighter text-ink">
           Couldn&apos;t load nearby restaurants.
         </h3>
-        <p className="m-0 text-sm text-ink-soft">{errorMessage}</p>
+        <p className="m-0 text-sm font-bold text-ink-soft">{errorMessage}</p>
       </div>
     );
   }
@@ -135,13 +135,13 @@ function ResultsList() {
   if (!restaurants.length) {
     return (
       <div
-        className="border border-dashed border-ink-faint/50 rounded-xl p-6 text-center"
+        className="border-2 border-ink bg-white p-6"
         role="status"
       >
-        <h3 className="m-0 mb-2 text-sm font-semibold text-ink">
+        <h3 className="m-0 mb-2 text-xl font-black uppercase tracking-tighter text-ink">
           No matches yet.
         </h3>
-        <p className="m-0 text-sm text-ink-soft">
+        <p className="m-0 text-sm font-bold text-ink-soft">
           Try widening radius, toggling open-now, or clearing cuisine filters.
         </p>
       </div>
@@ -150,7 +150,7 @@ function ResultsList() {
 
   return (
     <div
-      className="grid gap-3 pt-1 pb-2"
+      className="flex flex-col border-t-2 border-b-2 border-ink"
       aria-live="polite"
     >
       {restaurants.map((restaurant, index) => (

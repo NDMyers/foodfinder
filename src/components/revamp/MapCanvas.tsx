@@ -10,6 +10,7 @@ interface MapCanvasProps {
   center: Coordinates | null;
   restaurants: RestaurantCard[];
   selectedRestaurantId: string | null;
+  winnerId: string | null;
   onSelectRestaurant: (restaurantId: string) => void;
 }
 
@@ -27,7 +28,7 @@ function makePinElement(selected: boolean) {
   });
 }
 
-function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelectRestaurant }: MapCanvasProps) {
+function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, winnerId, onSelectRestaurant }: MapCanvasProps) {
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
@@ -121,14 +122,17 @@ function MapCanvas({ apiKey, center, restaurants, selectedRestaurantId, onSelect
       marker.content = makePinElement(restaurantId === selectedRestaurantId);
     });
 
-    const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);
-    if (selectedRestaurant) {
-      mapRef.current.panTo({
-        lat: selectedRestaurant.location.latitude,
-        lng: selectedRestaurant.location.longitude,
-      });
+    if (winnerId) {
+      const winner = restaurants.find((r) => r.id === winnerId);
+      if (winner) {
+        mapRef.current.panTo({
+          lat: winner.location.latitude,
+          lng: winner.location.longitude,
+        });
+        mapRef.current.setZoom(16);
+      }
     }
-  }, [restaurants, selectedRestaurantId]);
+  }, [selectedRestaurantId, winnerId, restaurants]);
 
   useEffect(() => {
     return () => clearMarkers();

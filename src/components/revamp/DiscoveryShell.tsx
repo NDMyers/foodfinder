@@ -38,6 +38,7 @@ function ShellLayout({ mapApiKey }: DiscoveryShellProps) {
           selectedRestaurantId={
             state.highlightedRestaurantId ?? state.selectedRestaurantId
           }
+          winnerId={state.winner?.id ?? null}
           onSelectRestaurant={handleSelectRestaurant}
         />
       </div>

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { useSearch, type SheetSnap } from "@/contexts/SearchContext";
-import { CUISINES, METERS_TO_MILES, RADIUS_OPTIONS, type RadiusMeters, type SortBy } from "@/types/filters";
+import { CUISINES, METERS_TO_MILES, RADIUS_OPTIONS, type RadiusMeters } from "@/types/filters";
 import Button from "@/components/ui/Button";
 import CuisineChip from "@/components/ui/CuisineChip";
 import Dropdown from "@/components/ui/Dropdown";
@@ -39,7 +39,6 @@ export default function FilterSheet() {
     geocodeAddress,
     searchAndPickWinner,
     updateRadius,
-    updateSort,
     updateOpenNow,
     toggleCuisine,
     setSheetSnap,
@@ -82,7 +81,7 @@ export default function FilterSheet() {
         if (state.sheetSnap === "peek") snapToPosition("half");
         else snapToPosition("full");
       } else {
-        animate(dragY, 0, { type: "spring", stiffness: 300, damping: 30 });
+        animate(dragY, 0, { type: "tween", duration: 0.2 });
       }
     },
     [state.sheetSnap, snapToPosition, dragY]
@@ -144,26 +143,23 @@ export default function FilterSheet() {
       }}
       className={`
         fixed left-0 right-0 bottom-0 z-20 flex flex-col
-        bg-white/70 backdrop-blur-2xl
-        border-t border-glass-border
-        rounded-t-[2rem]
-        shadow-glass
-        transition-[max-height] duration-300 ease-out
-        md:absolute md:top-6 md:left-6 md:bottom-6 md:w-1/3 md:rounded-3xl md:border md:!max-h-[calc(100dvh-3rem)] md:bg-white/80 md:!transform-none md:overflow-y-auto
+        bg-white border-t-4 border-ink
+        rounded-t-none
+        transition-[max-height] duration-200 ease-out
+        md:absolute md:top-6 md:left-6 md:bottom-6 md:w-1/3 md:rounded-none md:border-r-4 md:border-b-4 md:border-l-4 md:!max-h-[calc(100dvh-3rem)] md:bg-white md:!transform-none md:overflow-y-auto
       `}
       data-snap={state.sheetSnap}
     >
-      {/* Drag handle — mobile only. drag="y" on this element feeds dragY which
-          applies to the parent section for a rubber-band visual effect. */}
+      {/* Drag handle — mobile only. */}
       <motion.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0.25}
+        dragElastic={0.1}
         onDrag={(_, info) => dragY.set(info.offset.y * 0.4)}
         onDragEnd={handleDragEnd}
-        className="flex justify-center pt-4 pb-2 cursor-grab active:cursor-grabbing md:hidden shrink-0 touch-none"
+        className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing md:hidden shrink-0 touch-none"
       >
-        <div className="w-14 h-1.5 rounded-full bg-ink/20 hover:bg-ink/30 transition-colors" />
+        <div className="w-16 h-2 bg-ink" />
       </motion.div>
 
       {/* Scrollable content area — overflow here, NOT on the outer section,
@@ -171,18 +167,16 @@ export default function FilterSheet() {
       <div className="flex flex-col gap-5 overflow-y-auto px-5 pt-3 pb-4 md:px-5 md:pt-5">
 
         {/* Header */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-start gap-3">
-            <div>
-              <h1 className="text-3xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-ink to-ink-soft m-0 leading-none">
-                Food Finder
-              </h1>
-            </div>
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl md:text-5xl font-black tracking-wider uppercase text-ink m-0 leading-none">
+              Food<br />Finder
+            </h1>
             <Button
               variant="secondary"
               onClick={requestUserLocation}
               disabled={state.locationState === "requesting"}
-              className="text-xs !bg-slate-600/80 !border-slate-500/50 !text-slate-100 hover:!bg-slate-600"
+              className="text-xs !bg-ink !text-white !border-ink w-fit mt-2"
             >
               {state.locationState === "requesting" ? "Locating..." : "Use Location"}
             </Button>
@@ -192,7 +186,7 @@ export default function FilterSheet() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Enter an address..."
+              placeholder="ENTER AN ADDRESS..."
               value={addressInput}
               onChange={(e) => handleAddressChange(e.target.value)}
               onKeyDown={(e) => {
@@ -205,20 +199,20 @@ export default function FilterSheet() {
               }}
               onFocus={() => addressInput.trim().length >= 3 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="w-full px-3 py-2 text-sm bg-white/40 border border-ink/20 rounded-xl placeholder-ink-soft/60 text-ink hover:border-ink/30 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              className="w-full px-4 py-3 text-sm font-bold uppercase tracking-tighter bg-white border-2 border-ink rounded-none placeholder-ink/40 text-ink focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2 transition-all"
             />
 
             {/* Autocomplete Suggestions */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white/90 backdrop-blur-md border border-glass-border/40 rounded-xl shadow-lg z-50 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-ink rounded-none shadow-elevated z-50 overflow-hidden">
                 {suggestions.map((suggestion, idx) => (
                   <button
                     key={`${suggestion.placeId}-${idx}`}
                     type="button"
                     onClick={() => handleSelectSuggestion(suggestion)}
-                    className="w-full px-3 py-2 text-sm text-left text-ink hover:bg-primary/10 transition-colors border-b border-glass-border/20 last:border-0"
+                    className="w-full px-4 py-3 text-sm text-left text-ink border-b-2 border-ink last:border-0 font-bold uppercase tracking-tighter"
                   >
-                    <div className="font-medium">{suggestion.description}</div>
+                    <div>{suggestion.description}</div>
                   </button>
                 ))}
               </div>
@@ -234,9 +228,9 @@ export default function FilterSheet() {
               state.loading ||
               state.isSelectingWinner
             }
-            className="text-sm font-semibold w-full"
+            className="w-full text-lg shadow-card mt-1"
           >
-            {state.loading ? "Searching..." : state.isSelectingWinner ? "Picking..." : "Search"}
+            {state.loading ? "Searching..." : state.isSelectingWinner ? "Picking..." : "Search Region"}
           </Button>
         </div>
 
@@ -248,7 +242,7 @@ export default function FilterSheet() {
         )}
 
         {/* Filter controls */}
-        <div className="grid grid-cols-2 gap-3 z-30">
+        <div className="flex flex-col gap-3 z-30">
           <Dropdown
             label="Search Radius"
             value={state.filters.radiusMeters}
@@ -259,38 +253,28 @@ export default function FilterSheet() {
             onChange={(val) => updateRadius(val as RadiusMeters)}
           />
 
-          <Dropdown
-            label="Sort Results"
-            value={state.filters.sortBy}
-            options={[
-              { label: "Distance", value: "distance" },
-              { label: "Rating", value: "rating" },
-            ]}
-            onChange={(val) => updateSort(val as SortBy)}
-          />
-
-          <label className="col-span-2 flex items-center gap-3 mt-1 p-3 rounded-xl bg-white/40 border border-glass-border/40 hover:bg-white/60 transition-colors cursor-pointer text-sm font-medium text-ink">
+          <label className="flex items-center gap-3 mt-1 p-3 bg-white cursor-pointer text-sm font-bold uppercase tracking-tighter text-ink">
             <input
               type="checkbox"
               checked={state.filters.openNow}
               onChange={(e) => updateOpenNow(e.target.checked)}
-              className="w-4 h-4 accent-primary rounded border-glass-border"
+              className="w-5 h-5 accent-ink border-2 border-ink bg-white rounded-none"
             />
             <span>Only show places currently open</span>
           </label>
         </div>
 
         {/* Cuisines — expandable */}
-        <div className="border border-glass-border/40 rounded-xl">
+        <div className="bg-white mt-1">
           <button
             type="button"
             onClick={() => setCuisinesOpen((o) => !o)}
-            className={`w-full flex items-center justify-between px-3 py-2.5 bg-white/40 hover:bg-white/60 transition-colors text-sm font-medium text-ink rounded-t-xl ${cuisinesOpen ? "" : "rounded-b-xl"}`}
+            className={`w-full flex items-center justify-between px-4 py-3 bg-white text-sm font-bold uppercase tracking-tighter text-ink ${cuisinesOpen ? "border-b-2 border-ink" : ""}`}
           >
             <span className="flex items-center gap-2">
               Cuisines
               {state.filters.cuisines.length > 0 && (
-                <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-accent text-white tabular-nums">
+                <span className="text-[10px] font-black px-2 py-0.5 bg-accent text-white border-2 border-accent">
                   {state.filters.cuisines.length}
                 </span>
               )}
@@ -300,8 +284,8 @@ export default function FilterSheet() {
               viewBox="0 0 20 20"
               fill="currentColor"
               animate={{ rotate: cuisinesOpen ? 180 : 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="w-4 h-4 text-ink-soft"
+              transition={{ duration: 0.15 }}
+              className="w-5 h-5"
             >
               <path
                 fillRule="evenodd"
@@ -317,7 +301,7 @@ export default function FilterSheet() {
               opacity: cuisinesOpen ? 1 : 0,
             }}
             initial={false}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            transition={{ duration: 0.15, ease: "linear" }}
             style={{ overflow: "hidden" }}
           >
             <div className="flex flex-wrap gap-2 px-3 py-3">

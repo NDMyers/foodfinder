@@ -10,39 +10,34 @@ const config: Config = {
     extend: {
       colors: {
         surface: "#ffffff",
-        background: "#f0f2f5", // Slightly deeper background for glass to stand out
+        background: "#ffffff",
         primary: {
-          DEFAULT: "#000000", // Stark, premium black
-          dark: "#1a1a1a",
-          light: "#333333",
+          DEFAULT: "#000000",
+          dark: "#000000",
+          light: "#111111",
         },
         accent: {
-          DEFAULT: "#2563eb", // Deep blue
-          dark: "#1d4ed8",
-          light: "#dbeafe",
+          DEFAULT: "#ff0000", // Stark, uncompromising Swiss Red
+          dark: "#cc0000",
+          light: "#ffcccc",
         },
         gold: {
-          DEFAULT: "#d97706",
-          light: "#fef3c7",
+          DEFAULT: "#ffcc00", // Stark warning yellow
+          light: "#fff5cc",
         },
         danger: {
-          DEFAULT: "#ef4444",
-          light: "#fef2f2",
+          DEFAULT: "#ff0000",
+          light: "#ffe6e6",
         },
         success: {
-          DEFAULT: "#10b981",
-          light: "#ecfdf5",
-          dark: "#047857",
+          DEFAULT: "#00cc00", // Strong green
+          light: "#e6ffe6",
+          dark: "#009900",
         },
         ink: {
-          DEFAULT: "#000000",
-          soft: "#4b5563",
-          faint: "#e5e7eb",
-        },
-        glass: {
-          DEFAULT: "rgba(255, 255, 255, 0.75)",
-          dark: "rgba(255, 255, 255, 0.4)",
-          border: "rgba(255, 255, 255, 0.5)",
+          DEFAULT: "#000000", // Pitch black
+          soft: "#666666",   // Harsh medium gray
+          faint: "#e0e0e0",  // Light construction gray
         },
       },
       fontFamily: {
@@ -50,25 +45,23 @@ const config: Config = {
         mono: ["var(--font-mono)", "JetBrains Mono", "monospace"],
       },
       letterSpacing: {
-        tight: "-0.02em",
-        tighter: "-0.04em",
+        tight: "-0.03em",
+        tighter: "-0.05em",
+        tightest: "-0.08em",
       },
       boxShadow: {
-        elevated: "0 20px 48px rgba(0, 0, 0, 0.08)",
-        soft: "0 10px 24px rgba(0, 0, 0, 0.06)",
-        card: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
-        glass: "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
-      },
-      backdropBlur: {
-        xs: "2px",
-        xl: "20px",
+        // Stark, hard silhouettes instead of soft elevations
+        elevated: "4px 4px 0px 0px rgba(0,0,0,1)",
+        soft: "2px 2px 0px 0px rgba(0,0,0,1)",
+        card: "4px 4px 0px 0px rgba(0,0,0,1)",
+        none: "0 0 0 0 rgba(0,0,0,0)",
       },
       screens: {
         md: "960px",
       },
       animation: {
-        "fade-in": "fadeIn 0.3s ease-out forwards",
-        "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "fade-in": "fadeIn 0.15s linear forwards",
+        "slide-up": "slideUp 0.2s cubic-bezier(0, 0, 0.2, 1) forwards",
       },
       keyframes: {
         fadeIn: {

@@ -11,11 +11,11 @@ interface CuisineChipProps {
 export default function CuisineChip({ label, active, onToggle }: CuisineChipProps) {
   return (
     <motion.label
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className={`inline-flex items-center rounded-full border px-4 py-2 cursor-pointer text-sm font-medium min-h-[44px] transition-all duration-300 ${active
-          ? "border-primary bg-primary text-white shadow-md shadow-primary/30"
-          : "border-glass-border/40 bg-white/40 backdrop-blur-md text-ink hover:bg-white/70"
+      whileHover={{ scale: 1 }}
+      whileTap={{ scale: 0.98 }}
+      className={`inline-flex items-center border-2 px-3 py-1 cursor-pointer text-sm font-bold uppercase tracking-tight min-h-[40px] rounded-none ${active
+        ? "border-primary bg-primary text-white"
+        : "border-ink bg-white text-ink"
         }`}
     >
       <input
