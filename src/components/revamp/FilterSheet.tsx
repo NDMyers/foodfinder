@@ -149,7 +149,7 @@ export default function FilterSheet() {
         rounded-t-[2rem]
         shadow-glass
         transition-[max-height] duration-300 ease-out
-        md:absolute md:top-6 md:left-6 md:bottom-6 md:w-96 md:rounded-3xl md:border md:!max-h-[calc(100dvh-3rem)] md:bg-white/80 md:!transform-none md:overflow-y-auto
+        md:absolute md:top-6 md:left-6 md:bottom-6 md:w-1/3 md:rounded-3xl md:border md:!max-h-[calc(100dvh-3rem)] md:bg-white/80 md:!transform-none md:overflow-y-auto
       `}
       data-snap={state.sheetSnap}
     >
