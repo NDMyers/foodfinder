@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { applyRateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const MAX_INPUT_LENGTH = 200;
+
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rateLimit = applyRateLimit(ip, 30);
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
+  }
   const apiKey =
     process.env.GOOGLE_PLACES_SERVER_KEY ??
     process.env.MAPS_API ??
@@ -30,6 +39,13 @@ export async function POST(request: NextRequest) {
 
   if (!input || typeof input !== "string" || !input.trim()) {
     return NextResponse.json({ predictions: [] }, { status: 200 });
+  }
+
+  if (input.length > MAX_INPUT_LENGTH) {
+    return NextResponse.json(
+      { error: { message: `Input must be ${MAX_INPUT_LENGTH} characters or fewer` } },
+      { status: 400 }
+    );
   }
 
   try {

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { applyRateLimit, getClientIp, rateLimitResponse } from "@/lib/ratelimit";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MAX_ADDRESS_LENGTH = 300;
 
 interface GeocodeResponse {
   latitude: number;
@@ -10,6 +14,12 @@ interface GeocodeResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rateLimit = applyRateLimit(ip, 20);
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
+  }
+
   const apiKey =
     process.env.GOOGLE_PLACES_SERVER_KEY ??
     process.env.MAPS_API ??
@@ -37,6 +47,13 @@ export async function POST(request: NextRequest) {
   if (!address || typeof address !== "string" || !address.trim()) {
     return NextResponse.json(
       { error: { message: "Address is required" } },
+      { status: 400 }
+    );
+  }
+
+  if (address.length > MAX_ADDRESS_LENGTH) {
+    return NextResponse.json(
+      { error: { message: `Address must be ${MAX_ADDRESS_LENGTH} characters or fewer` } },
       { status: 400 }
     );
   }

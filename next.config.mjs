@@ -1,3 +1,5 @@
+// 'unsafe-inline' is required for Google Maps JS API which injects inline scripts.
+// 'unsafe-eval' is dev-only for Next.js hot reload.
 const scriptSrc = process.env.NODE_ENV === "production"
   ? "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com"
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com";
@@ -41,6 +43,10 @@ const nextConfig = {
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
           },
         ],
       },

@@ -10,6 +10,17 @@ const DEFAULT_MAX_REQUESTS = 50;
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
+const CLEANUP_INTERVAL_MS = 60_000;
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore) {
+    if (now - entry.windowStartedAt >= DEFAULT_WINDOW_MS) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, CLEANUP_INTERVAL_MS).unref();
+
 export function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
