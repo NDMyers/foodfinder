@@ -34,3 +34,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI & Developer Tools
+TASK.md
+task.md
+implementation_plan.md
+walkthrough.md
+.claude/
+.gemini/
+.playwright-mcp/
+docs/plans/
